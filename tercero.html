@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#f7c5d4" />
+  <title>Tercero Básico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --tinta: #3e4d63;
+      --suave: #6d7c90;
+      --celeste: #b7e4f5;
+      --cielo: #7ec8e3;
+      --rosa: #f7c5d4;
+      --petal: #e89ab4;
+      --papel: #fffdfb;
+      --crema: #fff5f8;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      min-height: 100dvh;
+      font-family: Nunito, system-ui, sans-serif;
+      color: var(--tinta);
+      background: linear-gradient(165deg, #d7f1fb 0%, #fde7ef 48%, #f7e6c8 100%);
+    }
+    canvas#cielo {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 6;
+    }
+    .escena {
+      position: relative;
+      z-index: 1;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding:
+        max(0.8rem, env(safe-area-inset-top))
+        max(0.85rem, env(safe-area-inset-right))
+        calc(5.6rem + env(safe-area-inset-bottom))
+        max(0.85rem, env(safe-area-inset-left));
+    }
+    .tope {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
+    }
+    .marca {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #5f8ea3;
+    }
+    .volver {
+      border: 0;
+      background: rgba(255,255,255,.75);
+      color: var(--tinta);
+      font: inherit;
+      font-weight: 800;
+      min-height: 44px;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      touch-action: manipulation;
+    }
+    .libro {
+      flex: 1;
+      perspective: 1400px;
+      display: flex;
+      min-width: 0;
+    }
+    .hoja {
+      width: 100%;
+      min-height: min(70dvh, 640px);
+      background:
+        linear-gradient(90deg, rgba(232,154,180,.28), transparent 18px),
+        linear-gradient(180deg, #fff 0%, var(--papel) 100%);
+      border-radius: 4px 22px 22px 4px;
+      box-shadow:
+        8px 12px 0 rgba(126,200,227,.35),
+        14px 18px 28px rgba(94, 74, 92, .12);
+      padding: 1.15rem 1.05rem 1.2rem 1.25rem;
+      transform-origin: left center;
+      position: relative;
+    }
+    .hoja::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 14px;
+      border-radius: 4px 0 0 4px;
+      background: linear-gradient(90deg, #f3b7c9, #f7d5e0);
+    }
+    .hoja.sale { animation: doblar .55s ease forwards; }
+    @keyframes doblar {
+      to { transform: rotateY(-78deg); filter: brightness(.96); }
+    }
+    .etiqueta {
+      margin: 0 0 0.35rem 6px;
+      color: var(--petal);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    h1, h2 {
+      font-family: Fraunces, Georgia, serif;
+      margin: 0 0 0.45rem 6px;
+      line-height: 1.15;
+    }
+    h1 { font-size: 1.7rem; }
+    h2 { font-size: 1.28rem; }
+    .pista, .aviso, .pie {
+      margin: 0.35rem 0 0.8rem 6px;
+      color: var(--suave);
+      font-size: 0.95rem;
+    }
+    .aviso { color: #b4234a; min-height: 1.2em; }
+    label { display: block; margin-left: 6px; font-weight: 800; font-size: 0.85rem; }
+    input[type="text"] {
+      width: calc(100% - 6px);
+      margin: 0.4rem 0 0 6px;
+      min-height: 52px;
+      font: inherit;
+      font-size: 16px;
+      border-radius: 14px;
+      border: 1.5px solid #f3c2d2;
+      padding: 0.7rem 0.85rem;
+      background: #fff;
+    }
+    .ops { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.8rem; }
+    .op {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      min-height: 52px;
+      padding: 0.75rem 0.75rem;
+      border-radius: 16px;
+      border: 1.5px solid #ead7df;
+      background: #fff;
+      font: inherit;
+      font-size: 1rem;
+      line-height: 1.3;
+      color: var(--tinta);
+      touch-action: manipulation;
+      transition: transform .12s ease, background .2s ease, border-color .2s ease;
+    }
+    .op:active { transform: scale(0.97); }
+    .op span:last-child { flex: 1; min-width: 0; }
+    .op.sel { border-color: var(--cielo); background: #e7f6fc; }
+    .letra {
+      width: 1.7rem; height: 1.7rem; flex: 0 0 auto;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--rosa); font-weight: 800; font-size: 0.78rem;
+    }
+    .op.sel .letra { background: var(--cielo); }
+    .nav {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 3;
+      display: flex;
+      gap: 0.6rem;
+      padding:
+        0.7rem
+        max(0.9rem, env(safe-area-inset-right))
+        calc(0.7rem + env(safe-area-inset-bottom))
+        max(0.9rem, env(safe-area-inset-left));
+      background: rgba(255, 248, 251, .92);
+      backdrop-filter: blur(8px);
+    }
+    .nav button {
+      flex: 1;
+      min-height: 48px;
+      border: 0;
+      border-radius: 16px;
+      font: inherit;
+      font-weight: 800;
+      font-size: 1rem;
+      touch-action: manipulation;
+      transition: transform .12s ease;
+    }
+    .nav button:active, .volver:active { transform: scale(0.97); }
+    .sig { background: linear-gradient(90deg, #7ec8e3, #e89ab4); color: #fff; }
+    .atr { background: #fff; color: var(--tinta); flex: 0.7; border: 1.5px solid #f3c2d2; }
+    .punteo {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 4rem;
+      line-height: .9;
+      margin: 0.2rem 0 0.2rem 6px;
+      color: #5aa7c4;
+    }
+    .nota { font-weight: 800; margin-left: 6px; }
+    .lista { list-style: none; padding: 0; margin: 0.8rem 0 0; display: flex; flex-direction: column; gap: 0.4rem; }
+    .lista li {
+      display: flex; justify-content: space-between; gap: 0.5rem;
+      padding: 0.55rem 0.7rem; border-radius: 12px; font-size: 0.92rem;
+    }
+    .bien { background: #e5f7ef; color: #1d7a4d; }
+    .mal { background: #fde8ee; color: #9d3254; }
+    @media (max-width: 380px) {
+      h1 { font-size: 1.45rem; }
+      h2 { font-size: 1.15rem; }
+      .punteo { font-size: 3rem; }
+    }
+    @media (max-height: 520px) {
+      h1 { font-size: 1.35rem; }
+      .hoja { min-height: 0; padding-top: 0.8rem; }
+      .punteo { font-size: 2.4rem; }
+      .escena { padding-bottom: calc(4.6rem + env(safe-area-inset-bottom)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hoja.sale { animation: none; }
+      .op, .nav button, .volver { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="cielo"></canvas>
+  <div class="escena">
+    <div class="tope">
+      <div class="marca" id="marca"></div>
+      <button class="volver" type="button" onclick="location.href='index.html'">Volver</button>
+    </div>
+    <div class="libro"><article class="hoja" id="hoja"></article></div>
+  </div>
+  <div class="nav" id="nav"></div>
+  <script>
+    var HOJA_URL = "https://script.google.com/macros/s/AKfycby0kTVrGGrPtq-y79yZ9ts1mlsPSXvncULcI8FrCjPDrDkIAe_zmXEF2AQQoxNPnWeJ/exec";
+    var PRUEBA = {
+      id: "tercero",
+      claveLocal: "basico-tercero-v1",
+      titulo: "Tercero Básico",
+      tema: "Cinemática y conversiones",
+      preguntas: [
+        { tema: "Cinemática", texto: "La cinemática estudia…", pista: "Describe el movimiento, no por qué ocurre.", correcta: "b", opciones: [
+          ["a", "Las causas del movimiento"], ["b", "El movimiento de los cuerpos, sin tomar en cuenta las causas"], ["c", "Solo la masa de los objetos"], ["d", "El calor de los cuerpos"]]},
+        { tema: "Movimiento", texto: "Hay movimiento cuando…", pista: "Piensa en un punto de referencia.", correcta: "b", opciones: [
+          ["a", "El objeto se queda quieto"], ["b", "Un cuerpo cambia de posición respecto a un punto de referencia"], ["c", "Solo pasa el tiempo, sin cambiar de lugar"], ["d", "El objeto no tiene camino"]]},
+        { tema: "Trayectoria", texto: "La trayectoria es…", pista: "El recorrido, no el peso.", correcta: "a", opciones: [
+          ["a", "El camino que sigue un objeto durante su movimiento"], ["b", "La masa del objeto"], ["c", "Solo el punto final"], ["d", "La unidad metro"]]},
+        { tema: "Posición", texto: "La posición es…", pista: "Dónde está, respecto a un lugar de referencia.", correcta: "b", opciones: [
+          ["a", "El tiempo que dura el viaje"], ["b", "El lugar donde se encuentra un objeto respecto a un punto de referencia"], ["c", "La velocidad en m/s"], ["d", "Una conversión de kilómetros"]]},
+        { tema: "Unidades", texto: "Convertir unidades…", pista: "1 km y 1000 m son la misma distancia.", correcta: "b", opciones: [
+          ["a", "Cambia la cantidad medida"], ["b", "No cambia la cantidad, solo la forma de expresarla"], ["c", "Solo sirve para la masa"], ["d", "Borra el número"]]},
+        { tema: "Longitud", texto: "4 km equivalen a…", pista: "1 km = 1000 m.", correcta: "c", opciones: [
+          ["a", "40 m"], ["b", "400 m"], ["c", "4000 m"], ["d", "4 m"]]},
+        { tema: "Longitud", texto: "600 cm equivalen a…", pista: "100 cm = 1 m.", correcta: "a", opciones: [
+          ["a", "6 m"], ["b", "60 m"], ["c", "600 m"], ["d", "0.6 m"]]},
+        { tema: "Tiempo", texto: "2 horas equivalen a…", pista: "1 hora = 3600 segundos.", correcta: "c", opciones: [
+          ["a", "120 s"], ["b", "3600 s"], ["c", "7200 s"], ["d", "200 s"]]},
+        { tema: "Longitud", texto: "5000 metros equivalen a…", pista: "1000 m = 1 km.", correcta: "b", opciones: [
+          ["a", "50 km"], ["b", "5 km"], ["c", "500 km"], ["d", "0.5 km"]]},
+        { tema: "Velocidad", texto: "20 m/s significa que el automóvil…", pista: "La unidad junta metros y segundos.", correcta: "b", opciones: [
+          ["a", "Recorre 20 kilómetros cada hora"], ["b", "Recorre 20 metros cada segundo"], ["c", "Tarda 20 horas en llegar"], ["d", "Pesa 20 kilogramos"]]}
+      ]
+    };
+
+    var paso = 0;
+    var nombre = "";
+    var marcas = [];
+    var animando = false;
+    var guardado = null;
+    var modo = "libro";
+    var ciclo = null;
+    var enviando = false;
+
+    function el(tag, cls, texto) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (texto != null) n.textContent = texto;
+      return n;
+    }
+    function localLeer() {
+      try { return JSON.parse(localStorage.getItem(PRUEBA.claveLocal) || "null"); }
+      catch (e) { return null; }
+    }
+    function localGuardar(d) { localStorage.setItem(PRUEBA.claveLocal, JSON.stringify(d)); }
+    function total() { return PRUEBA.preguntas.length; }
+    function calificar() {
+      var aciertos = 0;
+      var detalle = PRUEBA.preguntas.map(function (p, i) {
+        var bien = marcas[i] === p.correcta;
+        if (bien) aciertos++;
+        return { n: i + 1, tema: p.tema, bien: bien };
+      });
+      return { aciertos: aciertos, puntos: aciertos + "/" + total(), nota: Math.round(aciertos / total() * 100), detalle: detalle };
+    }
+    function jsonp(params) {
+      return new Promise(function (resolve, reject) {
+        if (!HOJA_URL) { reject(new Error("Falta la dirección de Google Sheets.")); return; }
+        var cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e5);
+        var q = Object.keys(params).map(function (k) { return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); });
+        q.push("callback=" + cb);
+        var s = document.createElement("script");
+        var done = false;
+        var timer = setTimeout(function () {
+          if (done) return;
+          done = true;
+          cleanup();
+          reject(new Error("Google Sheets no respondió. Revisa que la app sea pública."));
+        }, 25000);
+        function cleanup() {
+          clearTimeout(timer);
+          try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+          if (s.parentNode) s.parentNode.removeChild(s);
+        }
+        window[cb] = function (data) { if (done) return; done = true; cleanup(); resolve(data); };
+        s.onerror = function () {};
+        s.src = HOJA_URL + (HOJA_URL.indexOf("?") >= 0 ? "&" : "?") + q.join("&");
+        document.head.appendChild(s);
+      });
+    }
+
+    function pintar() {
+      document.getElementById("marca").textContent = PRUEBA.titulo;
+      var hoja = document.getElementById("hoja");
+      var nav = document.getElementById("nav");
+      hoja.textContent = "";
+      nav.textContent = "";
+      if (modo === "resultado" || modo === "hecha") { pintarNota(hoja, nav); return; }
+      if (paso === 0) pintarPortada(hoja, nav);
+      else pintarPregunta(hoja, nav, paso - 1);
+    }
+    function pintarPortada(hoja, nav) {
+      hoja.appendChild(el("p", "etiqueta", "Página 1 · Portada"));
+      hoja.appendChild(el("h1", null, PRUEBA.titulo));
+      hoja.appendChild(el("p", "pista", PRUEBA.tema + ". Escribe tu nombre y pasa las páginas. Solo puedes hacerla una vez en este celular."));
+      var lab = el("label", null, "Nombre del alumno");
+      var input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = 80;
+      input.placeholder = "Nombre y apellido";
+      input.value = nombre;
+      input.addEventListener("input", function () { nombre = input.value; });
+      input.addEventListener("focus", function () {
+        setTimeout(function () { input.scrollIntoView({ block: "center" }); }, 280);
+      });
+      hoja.appendChild(lab);
+      hoja.appendChild(input);
+      var aviso = el("p", "aviso", "");
+      aviso.id = "aviso";
+      hoja.appendChild(aviso);
+      botonNav(nav, null, "Empezar", function () {
+        nombre = nombre.trim().replace(/\s+/g, " ");
+        if (nombre.length < 3) { document.getElementById("aviso").textContent = "Escribe tu nombre completo."; return; }
+        cambiar(1);
+      });
+    }
+    function pintarPregunta(hoja, nav, i) {
+      var p = PRUEBA.preguntas[i];
+      hoja.appendChild(el("p", "etiqueta", "Página " + (i + 2) + " · " + p.tema));
+      hoja.appendChild(el("h2", null, p.texto));
+      if (p.pista) hoja.appendChild(el("p", "pista", p.pista));
+      var caja = el("div", "ops");
+      p.opciones.forEach(function (op) {
+        var b = el("button", "op" + (marcas[i] === op[0] ? " sel" : ""));
+        b.type = "button";
+        b.appendChild(el("span", "letra", op[0].toUpperCase()));
+        b.appendChild(el("span", null, op[1]));
+        b.addEventListener("click", function () { marcas[i] = op[0]; pintar(); });
+        caja.appendChild(b);
+      });
+      hoja.appendChild(caja);
+      var aviso = el("p", "aviso", "");
+      aviso.id = "aviso";
+      hoja.appendChild(aviso);
+      var ultimo = i === total() - 1;
+      botonNav(nav, function () { cambiar(-1); }, ultimo ? "Ver mi nota" : "Pasar página", function () {
+        if (!marcas[i]) { document.getElementById("aviso").textContent = "Elige una opción para pasar la página."; return; }
+        if (!ultimo) cambiar(1);
+        else terminar();
+      });
+    }
+    function pintarNota(hoja, nav) {
+      var nota = guardado || calificar();
+      hoja.appendChild(el("p", "etiqueta", modo === "hecha" ? "Ya fue hecha" : "Última página"));
+      hoja.appendChild(el("h1", null, nombre));
+      hoja.appendChild(el("p", "punteo", nota.puntos));
+      hoja.appendChild(el("p", "nota", "Nota: " + nota.nota));
+      hoja.appendChild(el("p", "pie", modo === "hecha"
+        ? "Esta prueba ya fue hecha. No puedes repetirla en este celular."
+        : (enviando ? "Guardando tu nota en Google Sheets…" : "Tu nota ya está en esta página.")));
+      var aviso = el("p", "aviso", "");
+      aviso.id = "aviso";
+      hoja.appendChild(aviso);
+      if (nota.detalle) {
+        var ul = el("ul", "lista");
+        nota.detalle.forEach(function (d) {
+          var li = el("li", d.bien ? "bien" : "mal");
+          li.appendChild(el("span", null, d.n + ". " + d.tema));
+          li.appendChild(el("strong", null, d.bien ? "Bien" : "Mal"));
+          ul.appendChild(li);
+        });
+        hoja.appendChild(ul);
+      }
+      if (modo !== "hecha" && !enviando) {
+        var re = el("button", "sig", "Reintentar guardado");
+        re.type = "button";
+        re.style.margin = "1rem 6px 0";
+        re.style.width = "calc(100% - 6px)";
+        re.addEventListener("click", enviarNube);
+        hoja.appendChild(re);
+      }
+      nav.appendChild(el("button", "sig", ""));
+      nav.textContent = "";
+      var ini = el("button", "sig", "Volver al inicio");
+      ini.type = "button";
+      ini.addEventListener("click", function () { location.href = "index.html"; });
+      nav.appendChild(ini);
+    }
+    function botonNav(nav, atras, textoSig, sig) {
+      if (atras) {
+        var b = el("button", "atr", "Atrás");
+        b.type = "button";
+        b.addEventListener("click", atras);
+        nav.appendChild(b);
+      }
+      var s = el("button", "sig", textoSig);
+      s.type = "button";
+      s.addEventListener("click", sig);
+      nav.appendChild(s);
+    }
+    function cambiar(dir) {
+      if (animando) return;
+      animando = true;
+      var hoja = document.getElementById("hoja");
+      hoja.classList.add("sale");
+      setTimeout(function () {
+        paso += dir;
+        hoja.classList.remove("sale");
+        animando = false;
+        pintar();
+      }, 420);
+    }
+    function terminar() {
+      var nota = calificar();
+      guardado = {
+        estado: "pendiente",
+        nombre: nombre,
+        respuestas: marcas.slice(),
+        puntos: nota.puntos,
+        nota: nota.nota,
+        detalle: nota.detalle,
+        fecha: new Date().toLocaleString("es-GT"),
+        ciclo: ciclo
+      };
+      localGuardar(guardado);
+      modo = "resultado";
+      enviando = true;
+      pintar();
+      enviarNube();
+    }
+    function enviarNube() {
+      if (!HOJA_URL) {
+        enviando = false;
+        pintar();
+        var aviso = document.getElementById("aviso");
+        if (aviso) aviso.textContent = "Tu nota quedó en este celular. Falta conectar Google Sheets.";
+        return;
+      }
+      enviando = true;
+      jsonp({
+        action: "guardar",
+        nombre: nombre,
+        materia: PRUEBA.id,
+        respuestas: marcas.join(","),
+        fecha: guardado.fecha
+      }).then(function (res) {
+        if (!res || !res.ok) throw new Error((res && res.error) || "No se guardó");
+        guardado.estado = "guardada";
+        guardado.puntos = res.puntos;
+        guardado.nota = res.nota;
+        localGuardar(guardado);
+        enviando = false;
+        modo = "hecha";
+        pintar();
+      }).catch(function (err) {
+        enviando = false;
+        pintar();
+        var aviso = document.getElementById("aviso");
+        if (aviso) aviso.textContent = err.message || "No se pudo guardar. Baja y pulsa reintentar.";
+      });
+    }
+    var yaInicio = false;
+    function arrancar(cicloSrv) {
+      if (cicloSrv != null) ciclo = Number(cicloSrv);
+      var local = localLeer();
+      var nuevoCiclo = local && local.estado && cicloSrv != null && (
+        (local.ciclo != null && Number(local.ciclo) !== Number(cicloSrv)) ||
+        (local.ciclo == null && Number(cicloSrv) > 1)
+      );
+      if (nuevoCiclo) {
+        localStorage.removeItem(PRUEBA.claveLocal);
+        local = null;
+        nombre = "";
+        marcas = [];
+        guardado = null;
+        modo = "libro";
+        paso = 0;
+        yaInicio = false;
+      }
+      if (yaInicio) return;
+      yaInicio = true;
+      if (local && local.estado) {
+        nombre = local.nombre || "";
+        marcas = local.respuestas || [];
+        guardado = local;
+        modo = local.estado === "guardada" ? "hecha" : "resultado";
+        pintar();
+        if (modo === "resultado") enviarNube();
+        return;
+      }
+      pintar();
+    }
+    arrancar(null);
+    if (HOJA_URL) {
+      jsonp({ action: "asegurar" }).then(function (res) {
+        if (res && res.ok) arrancar(res.ciclo);
+      }).catch(function () {});
+    }
+
+    (function ambiente() {
+      function hex(h) {
+        return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+      }
+      function mezclar(a, b, t) {
+        return "rgb(" +
+          Math.round(a[0] + (b[0] - a[0]) * t) + "," +
+          Math.round(a[1] + (b[1] - a[1]) * t) + "," +
+          Math.round(a[2] + (b[2] - a[2]) * t) + ")";
+      }
+      function onda(phase) { return (Math.sin(phase) + 1) / 2; }
+      var cielo = ["#c5eefc", "#e7f7fd", "#f3fbff"].map(hex);
+      var rosa = ["#ffd0e4", "#ffe6f0", "#fff4f8"].map(hex);
+      function pintarFondo(ts) {
+        var base = ts / 4200;
+        var ang = 148 + Math.sin(ts / 7000) * 42;
+        var arriba = mezclar(cielo[0], rosa[0], onda(base));
+        var medio = mezclar(cielo[1], rosa[1], onda(base + 1.35));
+        var abajo = mezclar(cielo[2], rosa[2], onda(base + 2.7));
+        document.body.style.background = "linear-gradient(" + ang.toFixed(1) + "deg," + arriba + " 0%," + medio + " 46%," + abajo + " 100%)";
+      }
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var c = document.getElementById("cielo");
+      var ctx = c.getContext("2d");
+      var morados = ["#e4b7f4", "#d7a8ea", "#cbb0e8", "#e0c0f5"];
+      var celestes = ["#b5e7f5", "#9ddcf0", "#c4eef8", "#a8dff2"];
+      var corazon = new Path2D();
+      for (var i = 0; i <= 160; i++) {
+        var ang = (i / 160) * Math.PI * 2;
+        var x = 16 * Math.pow(Math.sin(ang), 3);
+        var y = -(13 * Math.cos(ang) - 5 * Math.cos(2 * ang) - 2 * Math.cos(3 * ang) - Math.cos(4 * ang));
+        if (i === 0) corazon.moveTo(x, y);
+        else corazon.lineTo(x, y);
+      }
+      corazon.closePath();
+      function sprite(color) {
+        var s = 72;
+        var cv = document.createElement("canvas");
+        cv.width = s;
+        cv.height = s;
+        var g = cv.getContext("2d");
+        g.translate(s / 2, s * 0.46);
+        g.scale(s / 42, s / 42);
+        g.fillStyle = color;
+        g.shadowBlur = 10;
+        g.shadowColor = color;
+        g.fill(corazon);
+        g.shadowBlur = 0;
+        g.fillStyle = "rgba(255,255,255,0.38)";
+        g.save();
+        g.scale(0.55, 0.55);
+        g.translate(0, -3);
+        g.fill(corazon);
+        g.restore();
+        return cv;
+      }
+      var brillo = (function () {
+        var s = 48;
+        var cv = document.createElement("canvas");
+        cv.width = s;
+        cv.height = s;
+        var g = cv.getContext("2d");
+        var grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        grd.addColorStop(0, "rgba(255,255,255,1)");
+        grd.addColorStop(0.18, "rgba(245,214,255,0.95)");
+        grd.addColorStop(0.42, "rgba(216,168,232,0.4)");
+        grd.addColorStop(1, "rgba(216,168,232,0)");
+        g.fillStyle = grd;
+        g.fillRect(0, 0, s, s);
+        g.strokeStyle = "rgba(255,255,255,0.75)";
+        g.lineWidth = 1.15;
+        g.beginPath();
+        g.moveTo(s / 2, s * 0.18);
+        g.lineTo(s / 2, s * 0.82);
+        g.moveTo(s * 0.18, s / 2);
+        g.lineTo(s * 0.82, s / 2);
+        g.stroke();
+        return cv;
+      })();
+      var niveles = 12;
+      var pasos = [];
+      var moradosRgb = morados.map(hex);
+      var celestesRgb = celestes.map(hex);
+      for (var n = 0; n <= niveles; n++) {
+        var tColor = n / niveles;
+        var fila = [];
+        for (var k = 0; k < 4; k++) fila.push(sprite(mezclar(moradosRgb[k], celestesRgb[k], tColor)));
+        pasos.push(fila);
+      }
+      var lluvia = [];
+      var polvo = [];
+      var w = innerWidth;
+      var h = innerHeight;
+      var acum = 0;
+      var ultimo = 0;
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      var toques = [];
+      addEventListener("click", function (e) {
+        var n = Math.min(w, h) < 560 ? 7 : 11;
+        for (var i = 0; i < n; i++) {
+          var a = Math.random() * Math.PI * 2;
+          var sp = rand(1.2, 3.6);
+          toques.push({
+            x: e.clientX,
+            y: e.clientY,
+            vx: Math.cos(a) * sp,
+            vy: Math.sin(a) * sp - 0.8,
+            rot: rand(-0.5, 0.5),
+            spin: rand(-0.1, 0.1),
+            life: 1,
+            decay: rand(0.02, 0.034),
+            size: rand(9, 16),
+            tono: (Math.random() * 4) | 0
+          });
+        }
+        toques.push({ x: e.clientX, y: e.clientY, anillo: 6, life: 1 });
+        if (toques.length > 70) toques.splice(0, toques.length - 70);
+        var enlace = e.target.closest ? e.target.closest("a.carta") : null;
+        if (enlace) {
+          e.preventDefault();
+          setTimeout(function () { location.href = enlace.href; }, 220);
+        }
+      });
+      function medida() {
+        var corto = Math.min(innerWidth, innerHeight) < 560;
+        var dpr = Math.min(window.devicePixelRatio || 1, corto ? 1.5 : 2);
+        w = innerWidth;
+        h = innerHeight;
+        c.width = Math.floor(w * dpr);
+        c.height = Math.floor(h * dpr);
+        c.style.width = w + "px";
+        c.style.height = h + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      medida();
+      addEventListener("resize", medida);
+      for (var p = 0; p < 42; p++) {
+        polvo.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: rand(0.6, 1.8),
+          a: rand(0.1, 0.28),
+          s: rand(0.06, 0.22),
+          ph: Math.random() * Math.PI * 2
+        });
+      }
+      function gota() {
+        var morado = Math.random() < 0.5;
+        lluvia.push({
+          x: rand(-20, w + 20),
+          y: rand(-120, -20),
+          vy: rand(0.85, 2.55),
+          sway: rand(0.6, 1.8),
+          phase: rand(0, Math.PI * 2),
+          rot: rand(-0.45, 0.45),
+          spin: rand(-0.014, 0.014),
+          size: rand(11, 36),
+          tono: (morado ? 0 : 2) + ((Math.random() * 2) | 0),
+          desfase: rand(0, Math.PI * 2),
+          alpha: rand(0.42, 0.9),
+          capa: Math.random() < 0.4 ? 0 : 1
+        });
+      }
+      var activo = true;
+      document.addEventListener("visibilitychange", function () {
+        var seguir = !document.hidden;
+        if (seguir && !activo) {
+          ultimo = 0;
+          activo = true;
+          requestAnimationFrame(frame);
+        }
+        activo = seguir;
+      });
+      function frame(ts) {
+        if (!ultimo) ultimo = ts;
+        var dt = Math.max(0, Math.min(0.05, (ts - ultimo) / 1000));
+        ultimo = ts;
+        pintarFondo(ts);
+        var tope = Math.min(w, h) < 560 ? 26 : 52;
+        acum += dt * 18;
+        while (acum >= 1 && lluvia.length < tope) {
+          acum -= 1;
+          gota();
+        }
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "rgba(210, 180, 235, 0.22)";
+        for (var i = 0; i < polvo.length; i++) {
+          var d = polvo[i];
+          d.ph += d.s * 0.02;
+          d.y -= d.s * 0.15;
+          if (d.y < -8) {
+            d.y = h + 8;
+            d.x = Math.random() * w;
+          }
+          ctx.globalAlpha = d.a + Math.sin(d.ph) * 0.05;
+          ctx.beginPath();
+          ctx.arc(d.x + Math.sin(d.ph) * 8, d.y, d.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (var capa = 0; capa < 2; capa++) {
+          for (var j = 0; j < lluvia.length; j++) {
+            var r = lluvia[j];
+            if (r.capa !== capa) continue;
+            r.y += r.vy * dt * 60;
+            r.phase += dt * 2.2;
+            r.rot += r.spin * dt * 60;
+            if (r.y > h + 50) {
+              r.y = rand(-90, -20);
+              r.x = rand(-20, w + 20);
+            }
+            var x = r.x + Math.sin(r.phase) * r.sway * 10;
+            var pulso = onda(ts / 2600 + r.desfase + r.y * 0.006);
+            var img = pasos[Math.round(pulso * niveles)][r.tono];
+            ctx.save();
+            ctx.globalAlpha = r.alpha * (capa === 0 ? 0.72 : 1);
+            ctx.translate(x, r.y);
+            ctx.rotate(r.rot);
+            ctx.drawImage(img, -r.size / 2, -r.size / 2, r.size, r.size);
+            if (capa === 1 && ((j & 5) === 0)) {
+              var s = r.size * 0.45;
+              ctx.globalAlpha = r.alpha * 0.35;
+              ctx.drawImage(brillo, -s / 2, -s / 2, s, s);
+            }
+            ctx.restore();
+          }
+        }
+        for (var tq = toques.length - 1; tq >= 0; tq--) {
+          var q = toques[tq];
+          if (q.anillo != null) {
+            q.anillo += 140 * dt;
+            q.life -= dt * 2.1;
+            if (q.life <= 0) { toques.splice(tq, 1); continue; }
+            ctx.beginPath();
+            ctx.arc(q.x, q.y, q.anillo, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(232, 154, 180," + (q.life * 0.9) + ")";
+            ctx.lineWidth = 2.2;
+            ctx.stroke();
+            continue;
+          }
+          q.x += q.vx * dt * 60;
+          q.y += q.vy * dt * 60;
+          q.vy += 0.05 * dt * 60;
+          q.rot += q.spin;
+          q.life -= q.decay * dt * 60;
+          if (q.life <= 0) { toques.splice(tq, 1); continue; }
+          var corazonTap = pasos[Math.min(niveles, Math.round((1 - q.life) * niveles))][q.tono];
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, q.life);
+          ctx.translate(q.x, q.y);
+          ctx.rotate(q.rot);
+          var sz = q.size * (0.7 + q.life * 0.5);
+          ctx.drawImage(corazonTap, -sz / 2, -sz / 2, sz, sz);
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+        if (activo) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>

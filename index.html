@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#f7c5d4" />
+  <title>Pruebas básicas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,650;9..144,700&family=Nunito:wght@600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --tinta: #3e4d63; --suave: #6d7c90; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      min-height: 100dvh;
+      font-family: Nunito, system-ui, sans-serif;
+      color: var(--tinta);
+      background: linear-gradient(165deg, #d7f1fb 0%, #fde7ef 50%, #fff6ea 100%);
+    }
+    canvas#cielo { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; }
+    main {
+      position: relative;
+      z-index: 1;
+      width: min(34rem, 100%);
+      margin: 0 auto;
+      padding:
+        max(1.2rem, env(safe-area-inset-top))
+        max(1rem, env(safe-area-inset-right))
+        1rem
+        max(1rem, env(safe-area-inset-left));
+    }
+    .inicio, .panel { min-height: calc(100dvh - 4.5rem); }
+    .panel { display: none; }
+    body.abierto .inicio { display: none; }
+    body.abierto .panel { display: block; }
+    body.abierto .litpa { display: none; }
+    p.sello {
+      margin: 0 0 0.3rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #5f8ea3;
+    }
+    h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 2.15rem;
+      line-height: 1.1;
+      margin: 0 0 1rem;
+    }
+    .cartas { display: flex; flex-direction: column; gap: 0.8rem; }
+    a.carta {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: rgba(255,255,255,.82);
+      border-radius: 22px;
+      padding: 1.15rem 1.05rem;
+      min-height: 96px;
+      box-shadow: 0 12px 28px rgba(120, 90, 110, .1);
+    }
+    a.carta strong {
+      display: block;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 1.45rem;
+      margin-bottom: 0.15rem;
+    }
+    a.uno strong { color: #d989a6; }
+    a.dos strong { color: #5aa7c4; }
+    a.carta span { color: var(--suave); }
+    a.carta, button, summary {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .14s ease, background .2s ease;
+    }
+    a.carta:active, button:active {
+      transform: scale(0.97);
+    }
+    .litpa {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 1.2rem 1rem calc(1.15rem + env(safe-area-inset-bottom));
+      letter-spacing: 0.28em;
+      font-weight: 800;
+      color: #8eafbf;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      cursor: pointer;
+    }
+    .barra { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; }
+    .barra h1 { margin: 0; font-size: 1.7rem; }
+    button {
+      font: inherit;
+      font-weight: 800;
+      border: 0;
+      border-radius: 14px;
+      min-height: 46px;
+      padding: 0.45rem 0.85rem;
+    }
+    .fantasma { background: rgba(255,255,255,.85); color: var(--tinta); }
+    .alumno {
+      background: rgba(255,255,255,.88);
+      border-radius: 18px;
+      padding: 0.9rem;
+      margin: 0.75rem 0;
+    }
+    .alumno h2 { font-family: Fraunces, Georgia, serif; font-size: 1.2rem; margin: 0 0 0.4rem; }
+    .fila { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; padding: 0.28rem 0; }
+    .fila span { color: var(--suave); flex: 0 0 auto; }
+    .fila b { text-align: right; font-weight: 800; }
+    .pdf, .reiniciar, .copiar { width: 100%; margin-top: 0.55rem; color: #fff; }
+    .pdf { background: #7ec8e3; }
+    .reiniciar { background: #c45b78; }
+    .copiar { background: #e89ab4; }
+    .vacio { color: var(--suave); }
+    details { margin-top: 1rem; }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      margin-top: 0.5rem;
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      border-radius: 12px;
+      border: 1px solid #f3c2d2;
+      padding: 0.6rem;
+    }
+    .ayuda { color: var(--suave); font-size: 0.88rem; }
+    @media (max-width: 380px) {
+      h1 { font-size: 1.75rem; }
+      a.carta strong { font-size: 1.25rem; }
+    }
+    @media (max-height: 520px) {
+      .inicio, .panel { min-height: auto; }
+      h1 { font-size: 1.5rem; margin-bottom: 0.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="cielo"></canvas>
+  <main>
+    <section class="inicio">
+      <p class="sello">Matemáticas y Física</p>
+      <h1>Elige tu grado</h1>
+      <div class="cartas">
+        <a class="carta uno" href="segundo.html">
+          <strong>Segundo Básico</strong>
+          <span>Monomio, binomio y trinomio</span>
+        </a>
+        <a class="carta dos" href="tercero.html">
+          <strong>Tercero Básico</strong>
+          <span>Cinemática y conversiones</span>
+        </a>
+      </div>
+    </section>
+    <section class="panel" id="panel">
+      <div class="barra">
+        <h1>Notas</h1>
+        <button type="button" class="fantasma" id="cerrar">Volver</button>
+      </div>
+      <p class="ayuda" id="estado"></p>
+      <div id="lista"></div>
+      <button type="button" class="reiniciar" id="reiniciar">Reiniciar</button>
+      <details>
+        <summary>Código para Google Sheets</summary>
+        <p class="ayuda">Pega el archivo Codigo_Google_Sheets.gs en Extensiones → Apps Script, publica la app como “Cualquier persona” y “Ejecutar como: Yo”. Luego copia la URL /exec en la línea HOJA_URL de los tres HTML. El recuadro de abajo es el mismo script, por si lo quieres copiar desde aquí.</p>
+        <textarea id="codigo" readonly></textarea>
+        <button type="button" class="copiar" id="copiar">Copiar código</button>
+      </details>
+    </section>
+  </main>
+  <div class="litpa" id="litpa">LITPA</div>
+  <script>
+    var HOJA_URL = "https://script.google.com/macros/s/AKfycby0kTVrGGrPtq-y79yZ9ts1mlsPSXvncULcI8FrCjPDrDkIAe_zmXEF2AQQoxNPnWeJ/exec";
+    var pulso = null;
+    var toquesLitpa = 0;
+    var litpa = document.getElementById("litpa");
+    function abrirPanel() {
+      clearTimeout(pulso);
+      pulso = null;
+      toquesLitpa = 0;
+      document.body.classList.add("abierto");
+      cargar();
+    }
+    litpa.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toquesLitpa += 1;
+      clearTimeout(pulso);
+      if (toquesLitpa >= 3) {
+        abrirPanel();
+        return;
+      }
+      pulso = setTimeout(function () { toquesLitpa = 0; }, 2000);
+    });
+    litpa.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    document.getElementById("cerrar").onclick = function () { document.body.classList.remove("abierto"); };
+
+    function jsonp(params) {
+      return new Promise(function (resolve, reject) {
+        if (!HOJA_URL) { reject(new Error("Falta pegar la URL de Google en HOJA_URL.")); return; }
+        var cb = "cb_" + Date.now();
+        var q = Object.keys(params).map(function (k) { return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); });
+        q.push("callback=" + cb);
+        var s = document.createElement("script");
+        var done = false;
+        var timer = setTimeout(function () { if (done) return; done = true; cleanup(); reject(new Error("Sin respuesta de Google Sheets.")); }, 25000);
+        function cleanup() { clearTimeout(timer); try { delete window[cb]; } catch (e) {} if (s.parentNode) s.parentNode.removeChild(s); }
+        window[cb] = function (data) { if (done) return; done = true; cleanup(); resolve(data); };
+        s.onerror = function () {};
+        s.src = HOJA_URL + "?" + q.join("&");
+        document.head.appendChild(s);
+      });
+    }
+    function nodo(tag, cls, texto) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (texto != null) n.textContent = texto;
+      return n;
+    }
+    function fila(a, b) {
+      var d = nodo("div", "fila");
+      d.appendChild(nodo("span", null, a));
+      d.appendChild(nodo("b", null, b));
+      return d;
+    }
+    function datosPrueba(p) {
+      var conocidas = {
+        segundo: { grado: "Segundo Básico", materia: "Monomio, binomio y trinomio" },
+        tercero: { grado: "Tercero Básico", materia: "Cinemática y conversiones" }
+      };
+      var base = conocidas[p.clave] || { grado: "", materia: "" };
+      var texto = String(p.materia || "");
+      var corte = texto.split(" — ");
+      return {
+        grado: (corte.length > 1 ? corte[0] : base.grado) || texto,
+        materia: (corte.length > 1 ? corte.slice(1).join(" — ") : base.materia) || texto,
+        nota: String(p.nota == null ? "" : p.nota)
+      };
+    }
+    function cargar() {
+      var lista = document.getElementById("lista");
+      var estado = document.getElementById("estado");
+      lista.textContent = "";
+      if (!HOJA_URL) { estado.textContent = "Pega la URL en HOJA_URL, dentro de este archivo, segundo.html y tercero.html."; return; }
+      estado.textContent = "Cargando…";
+      jsonp({ action: "detalle" }).then(function (res) {
+        if (!res || !res.ok) throw new Error((res && res.error) || "No se pudo leer");
+        estado.textContent = "";
+        var alumnos = res.alumnos || [];
+        if (!alumnos.length) { lista.appendChild(nodo("p", "vacio", "Todavía no hay notas.")); return; }
+        alumnos.forEach(function (al) {
+          var card = nodo("article", "alumno");
+          card.appendChild(nodo("h2", null, al.nombre));
+          (al.pruebas || []).forEach(function (p) {
+            var info = datosPrueba(p);
+            card.appendChild(fila("Grado", info.grado));
+            card.appendChild(fila("Prueba", info.materia));
+            card.appendChild(fila("Nota", info.nota));
+          });
+          var pdf = nodo("button", "pdf", "Descargar PDF");
+          pdf.type = "button";
+          pdf.onclick = function () { descargar(al, pdf); };
+          card.appendChild(pdf);
+          lista.appendChild(card);
+        });
+      }).catch(function (err) { estado.textContent = err.message; });
+    }
+    function esc(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+    function descargar(al, boton) {
+      boton.disabled = true;
+      var html = "<h1>" + esc(al.nombre) + "</h1>";
+      (al.pruebas || []).forEach(function (p) {
+        html += "<h2>" + esc(p.materia) + "</h2><p><b>Punteo: " + esc(p.puntos) + " · Nota: " + esc(p.nota) + "</b></p>";
+        (p.respuestas || []).forEach(function (r) {
+          html += "<p><b>" + r.n + ". " + esc(r.pregunta) + "</b><br>Respuesta: " + esc(r.alumno) + "<br>Correcta: " + esc(r.correcta) + " · " + esc(r.resultado) + "</p>";
+        });
+      });
+      var caja = document.createElement("div");
+      caja.style.cssText = "position:fixed;left:0;top:0;width:190mm;background:#fff;color:#222;padding:16px;font:14px Nunito,sans-serif;z-index:9";
+      caja.innerHTML = html;
+      document.body.appendChild(caja);
+      var s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+      s.onload = function () {
+        window.html2pdf().set({
+          margin: 10,
+          filename: "Nota - " + String(al.nombre).replace(/[\\/:*?"<>|]/g, "") + ".pdf",
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "mm", format: "a4" }
+        }).from(caja).save().then(function () {
+          caja.remove();
+          boton.disabled = false;
+        });
+      };
+      s.onerror = function () { caja.remove(); boton.disabled = false; alert("No se pudo crear el PDF."); };
+      document.head.appendChild(s);
+    }
+    document.getElementById("reiniciar").onclick = function () {
+      if (!HOJA_URL) return;
+      if (!confirm("¿Borrar todas las notas y dejar las pruebas listas para empezar de nuevo?")) return;
+      jsonp({ action: "borrar", clave: "BORRAR" }).then(function (res) {
+        if (!res || !res.ok) throw new Error((res && res.error) || "No se pudo reiniciar");
+        document.getElementById("lista").textContent = "";
+        document.getElementById("estado").textContent = "Listo. Pueden presentar otra vez.";
+      }).catch(function (err) { alert(err.message); });
+    };
+
+    document.getElementById("codigo").value = [
+"var HOJA_PREGUNTAS='Preguntas';",
+"var HOJA_RESUMEN='Resumen';",
+"var CLAVE_DOCENTE='BORRAR';",
+"function P(tema,pregunta,a,b,c,d,correcta){return {tema:tema,pregunta:pregunta,a:a,b:b,c:c,d:d,correcta:correcta};}",
+"var MATERIAS={",
+"segundo:{etiqueta:'Segundo Básico — Polinomios',banco:[",
+"P('Concepto','Un monomio es una expresión con…','Dos términos','Un solo término','Tres términos','Cuatro términos','b'),",
+"P('Concepto','La expresión (x + 4) es un…','Monomio','Trinomio','Binomio','Número suelto','c'),",
+"P('Idea clave','Para multiplicar polinomios siempre se usa…','La propiedad distributiva','Solo sumar exponentes','Dividir entre 2','Borrar las x','a'),",
+"P('Monomio','¿Cuánto es 3x(x + 4)?','3x + 4','3x² + 12','3x² + 12x','7x','c'),",
+"P('Monomio','¿Cuánto es −2x(x² − 5)?','−2x³ + 10x','−2x³ − 10x','2x³ + 10x','−2x² + 5','a'),",
+"P('FOIL','En el método FOIL, Primero significa multiplicar…','Los dos últimos términos','El primer término de cada binomio','Solo los números','Los términos del medio','b'),",
+"P('Binomio','¿Cuánto es (x + 3)(x + 5)?','x² + 15','x² + 8x + 15','x² + 2x + 8','2x + 8','b'),",
+"P('Binomio','¿Cuánto es (x − 2)(x + 7)?','x² + 5x − 14','x² − 5x − 14','x² + 9x − 14','x² + 5x + 14','a'),",
+"P('Trinomio','Al multiplicar trinomio por trinomio se hacen…','3 multiplicaciones','6 multiplicaciones','9 multiplicaciones','12 multiplicaciones','c'),",
+"P('Cierre','Después de multiplicar, el último paso es…','Borrar las x','Reducir términos semejantes y ordenar de mayor a menor exponente','Dividir todo entre x','Dejar solo el primer término','b')",
+"]},",
+"tercero:{etiqueta:'Tercero Básico — Cinemática y conversiones',banco:[",
+"P('Cinemática','La cinemática estudia…','Las causas del movimiento','El movimiento de los cuerpos, sin tomar en cuenta las causas','Solo la masa de los objetos','El calor de los cuerpos','b'),",
+"P('Movimiento','Hay movimiento cuando…','El objeto se queda quieto','Un cuerpo cambia de posición respecto a un punto de referencia','Solo pasa el tiempo, sin cambiar de lugar','El objeto no tiene camino','b'),",
+"P('Trayectoria','La trayectoria es…','El camino que sigue un objeto durante su movimiento','La masa del objeto','Solo el punto final','La unidad metro','a'),",
+"P('Posición','La posición es…','El tiempo que dura el viaje','El lugar donde se encuentra un objeto respecto a un punto de referencia','La velocidad en m/s','Una conversión de kilómetros','b'),",
+"P('Unidades','Convertir unidades…','Cambia la cantidad medida','No cambia la cantidad, solo la forma de expresarla','Solo sirve para la masa','Borra el número','b'),",
+"P('Longitud','4 km equivalen a…','40 m','400 m','4000 m','4 m','c'),",
+"P('Longitud','600 cm equivalen a…','6 m','60 m','600 m','0.6 m','a'),",
+"P('Tiempo','2 horas equivalen a…','120 s','3600 s','7200 s','200 s','c'),",
+"P('Longitud','5000 metros equivalen a…','50 km','5 km','500 km','0.5 km','b'),",
+"P('Velocidad','20 m/s significa que el automóvil…','Recorre 20 kilómetros cada hora','Recorre 20 metros cada segundo','Tarda 20 horas en llegar','Pesa 20 kilogramos','b')",
+"]}};",
+"function ss_(){var ss=SpreadsheetApp.getActiveSpreadsheet(); if(!ss) throw new Error('Abre el script desde la hoja.'); return ss;}",
+"function jsonp_(e,obj){var t=JSON.stringify(obj); var cb=e&&e.parameter&&e.parameter.callback; if(cb && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(cb)) cb=''; if(cb) return ContentService.createTextOutput(cb+'('+t+')').setMimeType(ContentService.MimeType.JAVASCRIPT); return ContentService.createTextOutput(t).setMimeType(ContentService.MimeType.JSON);}",
+"function txt(item,l){if(l=='a')return item.a; if(l=='b')return item.b; if(l=='c')return item.c; if(l=='d')return item.d; return '';}",
+"function ciclo_(){var n=parseInt(PropertiesService.getScriptProperties().getProperty('ciclo')||'1',10); return n>0?n:1;}",
+"function asegurarPreguntas_(){var ss=ss_(); var sh=ss.getSheetByName(HOJA_PREGUNTAS); if(!sh) sh=ss.insertSheet(HOJA_PREGUNTAS,0); var rows=[['Materia','N°','Tema','Pregunta','A','B','C','D','Correcta','Respuesta correcta']]; Object.keys(MATERIAS).forEach(function(k){ MATERIAS[k].banco.forEach(function(it,i){ rows.push([MATERIAS[k].etiqueta,i+1,it.tema,it.pregunta,it.a,it.b,it.c,it.d,it.correcta.toUpperCase(),txt(it,it.correcta)]); }); }); sh.clear(); sh.getRange(1,1,rows.length,10).setValues(rows); sh.getRange(1,1,1,10).setFontWeight('bold'); sh.setFrozenRows(1); }",
+"function asegurarResumen_(){var ss=ss_(); var sh=ss.getSheetByName(HOJA_RESUMEN); if(!sh){ sh=ss.insertSheet(HOJA_RESUMEN,1); } if(sh.getLastRow()===0){ sh.appendRow(['Nombre','Clave','Materia','Puntos','Nota','Fecha','Hoja']); sh.getRange(1,1,1,7).setFontWeight('bold'); sh.setFrozenRows(1);} return sh; }",
+"function norm(n){return String(n||'').trim().replace(/\\s+/g,' ').toLowerCase();}",
+"function sanear(n){var s=String(n||'').replace(/[\\\\\\/\\?\\*\\[\\]:]/g,' ').replace(/\\s+/g,' ').trim(); if(s.length>90)s=s.substring(0,90).trim(); if(!s)s='Alumno'; var b=s.toLowerCase(); if(b==='preguntas'||b==='resumen') s=s+' alumno'; return s;}",
+"function hojaAlumno_(nombre){var limpio=sanear(nombre); var ss=ss_(); var hojas=ss.getSheets(); for(var i=0;i<hojas.length;i++){ var a=hojas[i].getName(); if(a===HOJA_PREGUNTAS||a===HOJA_RESUMEN) continue; if(a.toLowerCase()===limpio.toLowerCase()) return hojas[i]; } return ss.insertSheet(limpio); }",
+"function upsert_(nombre,clave,eti,puntos,nota,fecha,hoja){var sh=asegurarResumen_(); var last=sh.getLastRow(); var bus=norm(nombre); if(last>=2){ var d=sh.getRange(2,1,last-1,7).getValues(); for(var i=0;i<d.length;i++){ if(norm(d[i][0])===bus && String(d[i][1])===clave){ sh.getRange(i+2,1,1,7).setValues([[nombre,clave,eti,puntos,nota,fecha,hoja]]); return; } } } sh.appendRow([nombre,clave,eti,puntos,nota,fecha,hoja]); }",
+"function escribir_(sh,nombre,clave,eti,puntos,nota,fecha,filas){var grupos={}; function toma(f){ var id=String(f[1]||''); if(!id)return; if(!grupos[id]) grupos[id]={nota:null,res:[]}; if(String(f[0])==='Nota') grupos[id].nota=f; else grupos[id].res.push(f);} if(sh.getLastRow()>=4){ var d=sh.getRange(4,1,sh.getLastRow()-3,11).getValues(); for(var i=0;i<d.length;i++) if(String(d[i][1])!==clave) toma(d[i]); } toma(['Nota',clave,eti,'','','','','',puntos,nota,fecha]); filas.forEach(toma); var orden=[clave]; Object.keys(grupos).forEach(function(id){ if(id!==clave) orden.push(id); }); var cuerpo=[]; orden.forEach(function(id){ if(grupos[id].nota) cuerpo.push(grupos[id].nota); grupos[id].res.forEach(function(r){ cuerpo.push(r); }); }); sh.clear(); sh.getRange(1,1).setValue('Alumno'); sh.getRange(1,2).setValue(nombre); sh.getRange(3,1,1,11).setValues([['Tipo','Clave','Materia','N°','Pregunta','Respuesta del alumno','Respuesta correcta','Resultado','Puntos','Nota','Fecha']]); sh.getRange(3,1,1,11).setFontWeight('bold'); sh.setFrozenRows(3); if(cuerpo.length) sh.getRange(4,1,cuerpo.length,11).setValues(cuerpo); }",
+"function guardar_(nombre,clave,letras,fecha){var info=MATERIAS[clave]; if(!info) throw new Error('Materia desconocida'); asegurarPreguntas_(); var ac=0, filas=[]; for(var i=0;i<info.banco.length;i++){ var L=String(letras[i]||'').toLowerCase().trim(); var bien=L===info.banco[i].correcta; if(bien) ac++; filas.push(['Respuesta',clave,info.etiqueta,i+1,info.banco[i].pregunta, txt(info.banco[i],L)||'(sin responder)', txt(info.banco[i],info.banco[i].correcta), L?(bien?'Correcta':'Incorrecta'):'Sin responder','','','']); } var nota=Math.round(ac/info.banco.length*100); var puntos=ac+'/'+info.banco.length; var sh=hojaAlumno_(nombre); escribir_(sh,nombre,clave,info.etiqueta,puntos,nota,fecha,filas); upsert_(nombre,clave,info.etiqueta,puntos,nota,fecha,sh.getName()); return {puntos:puntos,nota:nota,fecha:fecha,hoja:sh.getName()}; }",
+"function detalle_(){var hojas=ss_().getSheets(); var alumnos=[]; hojas.forEach(function(sh){ var nomH=sh.getName(); if(nomH===HOJA_PREGUNTAS||nomH===HOJA_RESUMEN||sh.getLastRow()<4) return; var nombre=String(sh.getRange(1,2).getValue()||nomH); var datos=sh.getRange(4,1,sh.getLastRow()-3,11).getValues(); var pr={}, orden=[]; datos.forEach(function(f){ var tipo=String(f[0]||''), clave=String(f[1]||''); if(!clave) return; if(!pr[clave]){ pr[clave]={clave:clave,materia:String(f[2]||''),puntos:'',nota:0,fecha:'',respuestas:[]}; orden.push(clave);} if(tipo==='Nota'){ pr[clave].materia=String(f[2]||pr[clave].materia); pr[clave].puntos=String(f[8]||''); pr[clave].nota=Number(f[9]||0); pr[clave].fecha=String(f[10]||''); } else if(tipo==='Respuesta'){ pr[clave].respuestas.push({n:Number(f[3]||0),pregunta:String(f[4]||''),alumno:String(f[5]||''),correcta:String(f[6]||''),resultado:String(f[7]||'')}); } }); var lista=orden.map(function(k){ return pr[k]; }); if(lista.length) alumnos.push({nombre:nombre,hoja:nomH,pruebas:lista}); }); alumnos.sort(function(a,b){ return a.nombre.toLowerCase()<b.nombre.toLowerCase()?-1:1; }); return alumnos; }",
+"function borrar_(){asegurarPreguntas_(); var ss=ss_(); asegurarResumen_(); var hojas=ss.getSheets(); for(var i=hojas.length-1;i>=0;i--){ var n=hojas[i].getName(); if(n!==HOJA_PREGUNTAS && n!==HOJA_RESUMEN) ss.deleteSheet(hojas[i]); } var r=ss.getSheetByName(HOJA_RESUMEN); r.clear(); r.appendRow(['Nombre','Clave','Materia','Puntos','Nota','Fecha','Hoja']); r.getRange(1,1,1,7).setFontWeight('bold'); var c=ciclo_()+1; PropertiesService.getScriptProperties().setProperty('ciclo', String(c)); return c; }",
+"function doGet(e){ e=e||{parameter:{}}; var action=String((e.parameter.action||'list')).toLowerCase(); var lock=LockService.getScriptLock(); var tengo=false; try{ lock.waitLock(25000); tengo=true; if(action==='asegurar'){ asegurarPreguntas_(); asegurarResumen_(); return jsonp_(e,{ok:true,ciclo:ciclo_()}); } if(action==='detalle'||action==='list'){ return jsonp_(e,{ok:true,alumnos:detalle_()}); } if(action==='guardar'){ var nombre=String(e.parameter.nombre||'').trim().replace(/\\s+/g,' '); if(nombre.length<3) return jsonp_(e,{ok:false,error:'Nombre incompleto'}); var fecha=String(e.parameter.fecha||'')||new Date().toLocaleString('es_GT'); var r=guardar_(nombre, String(e.parameter.materia||'').toLowerCase(), String(e.parameter.respuestas||'').split(','), fecha); return jsonp_(e,{ok:true,puntos:r.puntos,nota:r.nota,fecha:r.fecha,hoja:r.hoja}); } if(action==='borrar'){ if(String(e.parameter.clave||'')!==CLAVE_DOCENTE) return jsonp_(e,{ok:false,error:'Clave incorrecta'}); borrar_(); return jsonp_(e,{ok:true,ciclo:ciclo_()}); } return jsonp_(e,{ok:false,error:'Acción desconocida'}); } catch(err){ return jsonp_(e,{ok:false,error:String(err.message||err)}); } finally { if(tengo) lock.releaseLock(); } }"
+    ].join("\n");
+    document.getElementById("copiar").onclick = function () {
+      var caja = document.getElementById("codigo");
+      caja.focus();
+      caja.select();
+      document.execCommand("copy");
+    };
+
+    (function ambiente() {
+      function hex(h) {
+        return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+      }
+      function mezclar(a, b, t) {
+        return "rgb(" +
+          Math.round(a[0] + (b[0] - a[0]) * t) + "," +
+          Math.round(a[1] + (b[1] - a[1]) * t) + "," +
+          Math.round(a[2] + (b[2] - a[2]) * t) + ")";
+      }
+      function onda(phase) { return (Math.sin(phase) + 1) / 2; }
+      var cielo = ["#c5eefc", "#e7f7fd", "#f3fbff"].map(hex);
+      var rosa = ["#ffd0e4", "#ffe6f0", "#fff4f8"].map(hex);
+      function pintarFondo(ts) {
+        var base = ts / 4200;
+        var ang = 148 + Math.sin(ts / 7000) * 42;
+        var arriba = mezclar(cielo[0], rosa[0], onda(base));
+        var medio = mezclar(cielo[1], rosa[1], onda(base + 1.35));
+        var abajo = mezclar(cielo[2], rosa[2], onda(base + 2.7));
+        document.body.style.background = "linear-gradient(" + ang.toFixed(1) + "deg," + arriba + " 0%," + medio + " 46%," + abajo + " 100%)";
+      }
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var c = document.getElementById("cielo");
+      var ctx = c.getContext("2d");
+      var morados = ["#e4b7f4", "#d7a8ea", "#cbb0e8", "#e0c0f5"];
+      var celestes = ["#b5e7f5", "#9ddcf0", "#c4eef8", "#a8dff2"];
+      var corazon = new Path2D();
+      for (var i = 0; i <= 160; i++) {
+        var ang = (i / 160) * Math.PI * 2;
+        var x = 16 * Math.pow(Math.sin(ang), 3);
+        var y = -(13 * Math.cos(ang) - 5 * Math.cos(2 * ang) - 2 * Math.cos(3 * ang) - Math.cos(4 * ang));
+        if (i === 0) corazon.moveTo(x, y);
+        else corazon.lineTo(x, y);
+      }
+      corazon.closePath();
+      function sprite(color) {
+        var s = 72;
+        var cv = document.createElement("canvas");
+        cv.width = s;
+        cv.height = s;
+        var g = cv.getContext("2d");
+        g.translate(s / 2, s * 0.46);
+        g.scale(s / 42, s / 42);
+        g.fillStyle = color;
+        g.shadowBlur = 10;
+        g.shadowColor = color;
+        g.fill(corazon);
+        g.shadowBlur = 0;
+        g.fillStyle = "rgba(255,255,255,0.38)";
+        g.save();
+        g.scale(0.55, 0.55);
+        g.translate(0, -3);
+        g.fill(corazon);
+        g.restore();
+        return cv;
+      }
+      var brillo = (function () {
+        var s = 48;
+        var cv = document.createElement("canvas");
+        cv.width = s;
+        cv.height = s;
+        var g = cv.getContext("2d");
+        var grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        grd.addColorStop(0, "rgba(255,255,255,1)");
+        grd.addColorStop(0.18, "rgba(245,214,255,0.95)");
+        grd.addColorStop(0.42, "rgba(216,168,232,0.4)");
+        grd.addColorStop(1, "rgba(216,168,232,0)");
+        g.fillStyle = grd;
+        g.fillRect(0, 0, s, s);
+        g.strokeStyle = "rgba(255,255,255,0.75)";
+        g.lineWidth = 1.15;
+        g.beginPath();
+        g.moveTo(s / 2, s * 0.18);
+        g.lineTo(s / 2, s * 0.82);
+        g.moveTo(s * 0.18, s / 2);
+        g.lineTo(s * 0.82, s / 2);
+        g.stroke();
+        return cv;
+      })();
+      var niveles = 12;
+      var pasos = [];
+      var moradosRgb = morados.map(hex);
+      var celestesRgb = celestes.map(hex);
+      for (var n = 0; n <= niveles; n++) {
+        var tColor = n / niveles;
+        var fila = [];
+        for (var k = 0; k < 4; k++) fila.push(sprite(mezclar(moradosRgb[k], celestesRgb[k], tColor)));
+        pasos.push(fila);
+      }
+      var lluvia = [];
+      var polvo = [];
+      var w = innerWidth;
+      var h = innerHeight;
+      var acum = 0;
+      var ultimo = 0;
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      var toques = [];
+      addEventListener("click", function (e) {
+        var n = Math.min(w, h) < 560 ? 7 : 11;
+        for (var i = 0; i < n; i++) {
+          var a = Math.random() * Math.PI * 2;
+          var sp = rand(1.2, 3.6);
+          toques.push({
+            x: e.clientX,
+            y: e.clientY,
+            vx: Math.cos(a) * sp,
+            vy: Math.sin(a) * sp - 0.8,
+            rot: rand(-0.5, 0.5),
+            spin: rand(-0.1, 0.1),
+            life: 1,
+            decay: rand(0.02, 0.034),
+            size: rand(9, 16),
+            tono: (Math.random() * 4) | 0
+          });
+        }
+        toques.push({ x: e.clientX, y: e.clientY, anillo: 6, life: 1 });
+        if (toques.length > 70) toques.splice(0, toques.length - 70);
+        var enlace = e.target.closest ? e.target.closest("a.carta") : null;
+        if (enlace) {
+          e.preventDefault();
+          setTimeout(function () { location.href = enlace.href; }, 220);
+        }
+      });
+      function medida() {
+        var corto = Math.min(innerWidth, innerHeight) < 560;
+        var dpr = Math.min(window.devicePixelRatio || 1, corto ? 1.5 : 2);
+        w = innerWidth;
+        h = innerHeight;
+        c.width = Math.floor(w * dpr);
+        c.height = Math.floor(h * dpr);
+        c.style.width = w + "px";
+        c.style.height = h + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      medida();
+      addEventListener("resize", medida);
+      for (var p = 0; p < 42; p++) {
+        polvo.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: rand(0.6, 1.8),
+          a: rand(0.1, 0.28),
+          s: rand(0.06, 0.22),
+          ph: Math.random() * Math.PI * 2
+        });
+      }
+      function gota() {
+        var morado = Math.random() < 0.5;
+        lluvia.push({
+          x: rand(-20, w + 20),
+          y: rand(-120, -20),
+          vy: rand(0.85, 2.55),
+          sway: rand(0.6, 1.8),
+          phase: rand(0, Math.PI * 2),
+          rot: rand(-0.45, 0.45),
+          spin: rand(-0.014, 0.014),
+          size: rand(11, 36),
+          tono: (morado ? 0 : 2) + ((Math.random() * 2) | 0),
+          desfase: rand(0, Math.PI * 2),
+          alpha: rand(0.42, 0.9),
+          capa: Math.random() < 0.4 ? 0 : 1
+        });
+      }
+      var activo = true;
+      document.addEventListener("visibilitychange", function () {
+        var seguir = !document.hidden;
+        if (seguir && !activo) {
+          ultimo = 0;
+          activo = true;
+          requestAnimationFrame(frame);
+        }
+        activo = seguir;
+      });
+      function frame(ts) {
+        if (!ultimo) ultimo = ts;
+        var dt = Math.max(0, Math.min(0.05, (ts - ultimo) / 1000));
+        ultimo = ts;
+        pintarFondo(ts);
+        var tope = Math.min(w, h) < 560 ? 26 : 52;
+        acum += dt * 18;
+        while (acum >= 1 && lluvia.length < tope) {
+          acum -= 1;
+          gota();
+        }
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "rgba(210, 180, 235, 0.22)";
+        for (var i = 0; i < polvo.length; i++) {
+          var d = polvo[i];
+          d.ph += d.s * 0.02;
+          d.y -= d.s * 0.15;
+          if (d.y < -8) {
+            d.y = h + 8;
+            d.x = Math.random() * w;
+          }
+          ctx.globalAlpha = d.a + Math.sin(d.ph) * 0.05;
+          ctx.beginPath();
+          ctx.arc(d.x + Math.sin(d.ph) * 8, d.y, d.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (var capa = 0; capa < 2; capa++) {
+          for (var j = 0; j < lluvia.length; j++) {
+            var r = lluvia[j];
+            if (r.capa !== capa) continue;
+            r.y += r.vy * dt * 60;
+            r.phase += dt * 2.2;
+            r.rot += r.spin * dt * 60;
+            if (r.y > h + 50) {
+              r.y = rand(-90, -20);
+              r.x = rand(-20, w + 20);
+            }
+            var x = r.x + Math.sin(r.phase) * r.sway * 10;
+            var pulso = onda(ts / 2600 + r.desfase + r.y * 0.006);
+            var img = pasos[Math.round(pulso * niveles)][r.tono];
+            ctx.save();
+            ctx.globalAlpha = r.alpha * (capa === 0 ? 0.72 : 1);
+            ctx.translate(x, r.y);
+            ctx.rotate(r.rot);
+            ctx.drawImage(img, -r.size / 2, -r.size / 2, r.size, r.size);
+            if (capa === 1 && ((j & 5) === 0)) {
+              var s = r.size * 0.45;
+              ctx.globalAlpha = r.alpha * 0.35;
+              ctx.drawImage(brillo, -s / 2, -s / 2, s, s);
+            }
+            ctx.restore();
+          }
+        }
+        for (var tq = toques.length - 1; tq >= 0; tq--) {
+          var q = toques[tq];
+          if (q.anillo != null) {
+            q.anillo += 140 * dt;
+            q.life -= dt * 2.1;
+            if (q.life <= 0) { toques.splice(tq, 1); continue; }
+            ctx.beginPath();
+            ctx.arc(q.x, q.y, q.anillo, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(232, 154, 180," + (q.life * 0.9) + ")";
+            ctx.lineWidth = 2.2;
+            ctx.stroke();
+            continue;
+          }
+          q.x += q.vx * dt * 60;
+          q.y += q.vy * dt * 60;
+          q.vy += 0.05 * dt * 60;
+          q.rot += q.spin;
+          q.life -= q.decay * dt * 60;
+          if (q.life <= 0) { toques.splice(tq, 1); continue; }
+          var corazonTap = pasos[Math.min(niveles, Math.round((1 - q.life) * niveles))][q.tono];
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, q.life);
+          ctx.translate(q.x, q.y);
+          ctx.rotate(q.rot);
+          var sz = q.size * (0.7 + q.life * 0.5);
+          ctx.drawImage(corazonTap, -sz / 2, -sz / 2, sz, sz);
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+        if (activo) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
